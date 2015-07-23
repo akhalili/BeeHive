@@ -20,6 +20,7 @@ class Thermostat:
 
     #
     # authorize the thermostat
+    #
     def authorize(self):
 
         # Request authorization
@@ -32,7 +33,41 @@ class Thermostat:
         print('In ' + str(expired_mins) +' Please register the app with pin code ' + pin_code + ' in your ecobee portal at http:////www.ecobee.com')
         raw_input('Press enter to continue...')
 
-        # Request access and refresh tokens
+        # Request access and refresh tokens and update
+        # the authorization config file
+        self.request_token()
+
+
+
+    #
+    # Update the authorization config file
+    #
+    def update_author_config_file(self):
+        with open('./AutoConfig.txt','wb') as config_file:
+            data = {'access_token': self.accesss_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
+            json.dump(data, config_file, ensure_ascii=False)
+
+    #
+    # Read the authorization config file
+    #
+    def read_author_config_file(self):
+
+        data = []
+        with open('./AutoConfig.txt','rb') as config_file:
+            data = json.load(config_file)
+
+        # update the class params
+        self.accesss_token = data['access_token']
+        self.token_type = data['token_type']
+        self.refresh_token = data['refresh_token']
+        self.expires = datetime.datetime.strptime(data['expires'],'%Y-%m-%d %H:%M:%S')
+        return data
+
+    #
+    # Request token and update the
+    # authorization config file
+    #
+    def request_token(self):
         token_params = {'grant_type':'ecobeePin', 'code': self.authorization_token, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
         self.accesss_token = data['access_token']
@@ -44,32 +79,28 @@ class Thermostat:
         self.update_author_config_file()
 
     #
-    # Update the authorization config file
-    def update_author_config_file(self):
-        with open('./AutoConfig.txt','wb') as config_file:
-            data = {'access_token': self.accesss_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
-            json.dump(data, config_file, ensure_ascii=False)
-
+    # refresh the access token and update
+    # the authorization config file
     #
-    # Read the authorization config file
-    def read_author_config_file(self):
+    def refresh_token(self):
+        token_params = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token, 'client_id': self.api_key}
+        data = self.post('token', params=token_params)
 
-        data = []
-        with open('./AutoConfig.txt','rb') as config_file:
-            data = json.load(config_file)
-
+        # update the class params
         self.accesss_token = data['access_token']
         self.token_type = data['token_type']
         self.refresh_token = data['refresh_token']
-        self.expires = datetime.datetime.strptime(data['expires'],'%Y-%m-%d %H:%M:%S')
+        self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
 
-        return data
+        # update the authorization config file
+        self.update_author_config_file()
 
     #
     # get a task and parameters to ecobee
     # task: the task
     # params: parameters to send
     # returns: json parsed response
+    #
     def get(self, task, params):
 
         url = ECOBEE_URL + task
@@ -83,6 +114,7 @@ class Thermostat:
     # task: the task
     # params: parameters to send
     # returns: json parsed response
+    #
     def post(self, task, params):
 
         url = ECOBEE_URL + task
