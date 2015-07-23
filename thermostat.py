@@ -18,6 +18,7 @@ class Thermostat:
         if datetime.datetime.now() > self.expires:
             self.authorize()
 
+    #
     # authorize the thermostat
     def authorize(self):
 
@@ -42,12 +43,14 @@ class Thermostat:
         # update the authorization config file
         self.update_author_config_file()
 
+    #
     # Update the authorization config file
     def update_author_config_file(self):
         with open('./AutoConfig.txt','wb') as config_file:
             data = {'access_token': self.accesss_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
             json.dump(data, config_file, ensure_ascii=False)
 
+    #
     # Read the authorization config file
     def read_author_config_file(self):
 
@@ -62,6 +65,7 @@ class Thermostat:
 
         return data
 
+    #
     # get a task and parameters to ecobee
     # task: the task
     # params: parameters to send
@@ -74,6 +78,7 @@ class Thermostat:
 
         return parsed_response
 
+    #
     # post a task and parameters to ecobee
     # task: the task
     # params: parameters to send
