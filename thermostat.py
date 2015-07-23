@@ -27,7 +27,7 @@ class Thermostat:
 
 
         # Request access and refresh tokens
-        token_params = {'grant_type': 'refresh_token', 'code': self.pin_code, 'client_id': self.api_key}
+        token_params = {'grant_type': u'ecobeePin', 'code': self.pin_code, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
         self.accesss_token = data['access_token']
         self.token_type = data['token_type']
@@ -52,8 +52,9 @@ class Thermostat:
     # returns: json parsed response
     def post(self, task, params):
 
-        url = ECOBEE_URL + task
-        response = requests.post(url, data=json.dumps(params))
+        url = ECOBEE_URL + task + '?grant_type=refresh_token&code=' + self.pin_code + '&client_id=' + self.api_key
+        response = requests.post(url)
+        print(response.url)
         parsed_response = response.json()
 
         return parsed_response

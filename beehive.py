@@ -1,9 +1,9 @@
 __author__ = 'Amirhossein'
 
-from thermostart import Thermostat
+from thermostat import Thermostat
 
 # consts
-APP_KEY = 'E4cnm01ecoRFpfS7WgHiADrMdBM2eab2'
+APP_KEY = unicode('gSeiSW30EV15zvA4efOIjD2lmsSioVz9')
 
 def main():
 
