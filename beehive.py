@@ -10,6 +10,8 @@ def main():
     # init thermostat
     thermostat = Thermostat(APP_KEY)
 
+    raw_input('wait:')
+
 
 if __name__ == '__main__':
     main()

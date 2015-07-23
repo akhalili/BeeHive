@@ -3,6 +3,8 @@ __author__ = 'Amirhossein'
 import json
 import requests
 import datetime
+import threading
+from time import sleep
 
 # Consts
 ECOBEE_URL = 'https://api.ecobee.com/'
@@ -13,10 +15,15 @@ class Thermostat:
 
         self.api_key = api_key
 
-        self.read_author_config_file()
-
-        if datetime.datetime.now() > self.expires:
+        try:
+            self.read_author_config_file()
+        except IOError:
             self.authorize()
+        else:
+            if datetime.datetime.now() > self.expires:
+                self.authorize()
+            else:
+                self.periodically_refresh_token()
 
     #
     # authorize the thermostat
@@ -36,6 +43,12 @@ class Thermostat:
         # Request access and refresh tokens and update
         # the authorization config file
         self.request_token()
+
+        # sleep for 30 seconds
+        sleep(3)
+
+        # periodically update the token
+        self.periodically_refresh_token()
 
 
 
@@ -82,7 +95,7 @@ class Thermostat:
     # refresh the access token and update
     # the authorization config file
     #
-    def refresh_token(self):
+    def update_refresh_token(self):
         token_params = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
 
@@ -94,6 +107,16 @@ class Thermostat:
 
         # update the authorization config file
         self.update_author_config_file()
+
+    #
+    # Periodically refresh the access token
+    #
+    def periodically_refresh_token(self):
+
+        print ('refresh token ...:' + str(datetime.datetime.now()))
+        self.update_refresh_token()
+        threading.Timer(10, self.periodically_refresh_token()).start()
+
 
     #
     # get a task and parameters to ecobee
