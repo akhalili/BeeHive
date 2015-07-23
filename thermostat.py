@@ -13,12 +13,12 @@ class Thermostat:
 
         self.api_key = api_key
 
-        self.readConfigFile()
+        self.read_author_config_file()
 
         if datetime.datetime.now() > self.expires:
             self.authorize()
 
-    # authorize the thermostart
+    # authorize the thermostat
     def authorize(self):
 
         # Request authorization
@@ -31,7 +31,6 @@ class Thermostat:
         print('In ' + str(expired_mins) +' Please register the app with pin code ' + pin_code + ' in your ecobee portal at http:////www.ecobee.com')
         raw_input('Press enter to continue...')
 
-
         # Request access and refresh tokens
         token_params = {'grant_type':'ecobeePin', 'code': self.authorization_token, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
@@ -40,15 +39,20 @@ class Thermostat:
         self.refresh_token = data['refresh_token']
         self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
 
+        # update the authorization config file
+        self.update_author_config_file()
 
-        with open('./config.txt','wb') as config_file:
+    # Update the authorization config file
+    def update_author_config_file(self):
+        with open('./AutoConfig.txt','wb') as config_file:
             data = {'access_token': self.accesss_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
             json.dump(data, config_file, ensure_ascii=False)
 
-    def readConfigFile(self):
+    # Read the authorization config file
+    def read_author_config_file(self):
 
         data = []
-        with open('./config.txt','rb') as config_file:
+        with open('./AutoConfig.txt','rb') as config_file:
             data = json.load(config_file)
 
         self.accesss_token = data['access_token']
@@ -56,10 +60,7 @@ class Thermostat:
         self.refresh_token = data['refresh_token']
         self.expires = datetime.datetime.strptime(data['expires'],'%Y-%m-%d %H:%M:%S')
 
-
         return data
-
-
 
     # get a task and parameters to ecobee
     # task: the task
@@ -72,7 +73,6 @@ class Thermostat:
         parsed_response = response.json()
 
         return parsed_response
-
 
     # post a task and parameters to ecobee
     # task: the task
