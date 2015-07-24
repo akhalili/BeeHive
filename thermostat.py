@@ -4,7 +4,7 @@ import json
 import requests
 import datetime
 import threading
-import urlparse
+from urlparse import urljoin
 from time import sleep
 
 #########
@@ -19,6 +19,8 @@ class Thermostat:
 
         self.api_key = api_key
         self.run_refresh_token = True
+        self.write_config_file_lock = threading.Lock()
+        self.refresh_token_event = threading.Event()
 
         try:
             self.read_author_config_file()
@@ -33,7 +35,7 @@ class Thermostat:
 
     def __del__(self):
         self.run_refresh_token = False
-        self.refreshing_token_thread.kill()
+        self.refresh_token_event.set()
 
     #
     # authorize the thermostat
@@ -55,34 +57,33 @@ class Thermostat:
         self.request_token()
 
         # start periodically update the token
-        wait_time = (self.expires-datetime.datetime.now()).total_second() / 2
-        self.refreshing_token_thread = threading.Timer(wait_time, target=self.periodically_refresh_token).start()
-
-
+        wait_time = (self.expires-datetime.datetime.now()).total_seconds() / 2
+        self.refreshing_token_thread = threading.Thread(self.periodically_refresh_token).start()
 
     #
     # Update the authorization config file
     #
-    def update_author_config_file(self):
-        with open('./AutoConfig.txt','wb') as config_file:
-            data = {'access_token': self.access_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
-            json.dump(data, config_file, ensure_ascii=False)
+    def write_author_config_file(self):
+        with self.write_config_file_lock:
+            with open('./AutoConfig.txt', 'wb') as config_file:
+                data = {'access_token': self.access_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
+                json.dump(data, config_file, ensure_ascii=False)
 
     #
     # Read the authorization config file
     #
     def read_author_config_file(self):
+        with self.write_config_file_lock:
+            data = []
+            with open('./AutoConfig.txt', 'rb') as config_file:
+                data = json.load(config_file)
 
-        data = []
-        with open('./AutoConfig.txt','rb') as config_file:
-            data = json.load(config_file)
-
-        # update the class params
-        self.access_token = data['access_token']
-        self.token_type = data['token_type']
-        self.refresh_token = data['refresh_token']
-        self.expires = datetime.datetime.strptime(data['expires'],'%Y-%m-%d %H:%M:%S')
-        return data
+            # update the class params
+            self.access_token = data['access_token']
+            self.token_type = data['token_type']
+            self.refresh_token = data['refresh_token']
+            self.expires = datetime.datetime.strptime(data['expires'], '%Y-%m-%d %H:%M:%S')
+            return data
 
     #
     # Request token and update the
@@ -97,13 +98,13 @@ class Thermostat:
         self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
 
         # update the authorization config file
-        self.update_author_config_file()
+        self.write_author_config_file()
 
     #
     # refresh the access token and update
     # the authorization config file
     #
-    def update_refresh_token(self):
+    def refresh_access_token(self):
         token_params = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
 
@@ -114,18 +115,20 @@ class Thermostat:
         self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
 
         # update the authorization config file
-        self.update_author_config_file()
+        self.write_author_config_file()
 
     #
     # Periodically refresh the access token
     #
     def periodically_refresh_token(self):
-
+        print ('refresh token waiting...')
+        self.refresh_token_event.wait(10) #(self.expires-datetime.datetime.now()).total_seconds())
         print ('refresh token ...:' + str(datetime.datetime.now()))
-        self.update_refresh_token()
+        self.refresh_access_token()
 
         if self.run_refresh_token:
-            self.refreshing_token_thread = threading.Timer(1800, self.periodically_refresh_token()).start()
+            threading.Thread(self.periodically_refresh_token()).start()
+        print ('thread finished')
 
     #
     # get a task and parameters to ecobee
@@ -135,7 +138,7 @@ class Thermostat:
     #
     def get(self, task, params):
 
-        url = ECOBEE_URL + task
+        url = urljoin(ECOBEE_URL, task)
         response = requests.get(url, params)
         parsed_response = response.json()
 
@@ -149,7 +152,7 @@ class Thermostat:
     #
     def post(self, task, params):
 
-        url = ECOBEE_URL + task
+        url = urljoin(ECOBEE_URL, task)
         response = requests.post(url, params=params)
         parsed_response = response.json()
 
@@ -159,20 +162,11 @@ class Thermostat:
 
         headers = {
                     'Content-Type': 'application/json;charset=UTF-8',
-                    'Authorization': "%s %s" % ( self.token_type, self.access_token)
+                    'Authorization': "%s %s" % (self.token_type, self.access_token)
         }
 
-
-        url = urlparse.urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
+        url = urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
         body = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
-        data = requests.get(url, headers=headers, params={'json': json.dumps( body ) })
+        data = requests.get(url, headers=headers, params={'json': json.dumps(body)})
         print data.text
         return data
-
-
-        #curl -H "Content-Type: text/json" -H "Authorization: Bearer ACCESS_TOKEN" 'https://api.ecobee.com/1/thermostat?format=json&body=\{"selection":\{"selectionType":"registered","selectionMatch":"","includeRuntime":true\}\}'
-
-
-
-
-
