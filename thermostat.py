@@ -4,10 +4,14 @@ import json
 import requests
 import datetime
 import threading
+import urlparse
 from time import sleep
 
+#########
 # Consts
+#########
 ECOBEE_URL = 'https://api.ecobee.com/'
+API_VERSION = 1
 
 class Thermostat:
 
@@ -22,8 +26,9 @@ class Thermostat:
         else:
             if datetime.datetime.now() > self.expires:
                 self.authorize()
-            else:
-                self.periodically_refresh_token()
+
+            #else:
+            #    self.periodically_refresh_token()
 
     #
     # authorize the thermostat
@@ -145,6 +150,17 @@ class Thermostat:
         parsed_response = response.json()
 
         return parsed_response
+
+    def make_request(self):
+        header = {'Content-Type':'application/json','charset': 'UTF-8'}
+        authorization_header = {'Authorization': self.token_type + ' ' + self.accesss_token}
+        url = urlparse.urljoin(ECOBEE_URL,str(API_VERSION),'thermostat')
+        body = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
+        data = requests.get(url, headers=header, json=body)
+        return data
+
+
+        #curl -H "Content-Type: text/json" -H "Authorization: Bearer ACCESS_TOKEN" 'https://api.ecobee.com/1/thermostat?format=json&body=\{"selection":\{"selectionType":"registered","selectionMatch":"","includeRuntime":true\}\}'
 
 
 

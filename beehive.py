@@ -9,6 +9,7 @@ def main():
 
     # init thermostat
     thermostat = Thermostat(APP_KEY)
+    thermostat.make_request()
 
     raw_input('wait:')
 
