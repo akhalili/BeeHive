@@ -26,9 +26,9 @@ class Thermostat:
         else:
             if datetime.datetime.now() > self.expires:
                 self.authorize()
+            else:
+                self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
 
-            #else:
-            #    self.periodically_refresh_token()
 
     #
     # authorize the thermostat
@@ -53,7 +53,7 @@ class Thermostat:
         sleep(3)
 
         # periodically update the token
-        self.periodically_refresh_token()
+        self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
 
 
 
@@ -120,7 +120,7 @@ class Thermostat:
 
         print ('refresh token ...:' + str(datetime.datetime.now()))
         self.update_refresh_token()
-        threading.Timer(10, self.periodically_refresh_token()).start()
+        threading.Timer(1800, self.periodically_refresh_token()).start()
 
 
     #
@@ -154,7 +154,7 @@ class Thermostat:
     def make_request(self):
         header = {'Content-Type':'application/json','charset': 'UTF-8'}
         authorization_header = {'Authorization': self.token_type + ' ' + self.accesss_token}
-        url = urlparse.urljoin(ECOBEE_URL,str(API_VERSION),'thermostat')
+        url = urlparse.urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
         body = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
         data = requests.get(url, headers=header, json=body)
         return data
