@@ -18,6 +18,7 @@ class Thermostat:
     def __init__(self, api_key):
 
         self.api_key = api_key
+        self.run_refresh_token = True
 
         try:
             self.read_author_config_file()
@@ -28,7 +29,11 @@ class Thermostat:
                 self.authorize()
             else:
                 self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
+                sleep(10)
 
+    def __del__(self):
+        self.run_refresh_token = False
+        self.refreshing_token_thread.kill()
 
     #
     # authorize the thermostat
@@ -49,11 +54,9 @@ class Thermostat:
         # the authorization config file
         self.request_token()
 
-        # sleep for 30 seconds
-        sleep(3)
-
-        # periodically update the token
-        self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
+        # start periodically update the token
+        wait_time = (self.expires-datetime.datetime.now()).total_second() / 2
+        self.refreshing_token_thread = threading.Timer(wait_time, target=self.periodically_refresh_token).start()
 
 
 
@@ -62,7 +65,7 @@ class Thermostat:
     #
     def update_author_config_file(self):
         with open('./AutoConfig.txt','wb') as config_file:
-            data = {'access_token': self.accesss_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
+            data = {'access_token': self.access_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
             json.dump(data, config_file, ensure_ascii=False)
 
     #
@@ -75,7 +78,7 @@ class Thermostat:
             data = json.load(config_file)
 
         # update the class params
-        self.accesss_token = data['access_token']
+        self.access_token = data['access_token']
         self.token_type = data['token_type']
         self.refresh_token = data['refresh_token']
         self.expires = datetime.datetime.strptime(data['expires'],'%Y-%m-%d %H:%M:%S')
@@ -88,7 +91,7 @@ class Thermostat:
     def request_token(self):
         token_params = {'grant_type':'ecobeePin', 'code': self.authorization_token, 'client_id': self.api_key}
         data = self.post('token', params=token_params)
-        self.accesss_token = data['access_token']
+        self.access_token = data['access_token']
         self.token_type = data['token_type']
         self.refresh_token = data['refresh_token']
         self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
@@ -105,7 +108,7 @@ class Thermostat:
         data = self.post('token', params=token_params)
 
         # update the class params
-        self.accesss_token = data['access_token']
+        self.access_token = data['access_token']
         self.token_type = data['token_type']
         self.refresh_token = data['refresh_token']
         self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
@@ -120,8 +123,9 @@ class Thermostat:
 
         print ('refresh token ...:' + str(datetime.datetime.now()))
         self.update_refresh_token()
-        threading.Timer(1800, self.periodically_refresh_token()).start()
 
+        if self.run_refresh_token:
+            self.refreshing_token_thread = threading.Timer(1800, self.periodically_refresh_token()).start()
 
     #
     # get a task and parameters to ecobee
@@ -152,11 +156,17 @@ class Thermostat:
         return parsed_response
 
     def make_request(self):
-        header = {'Content-Type':'application/json','charset': 'UTF-8'}
-        authorization_header = {'Authorization': self.token_type + ' ' + self.accesss_token}
+
+        headers = {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'Authorization': "%s %s" % ( self.token_type, self.access_token)
+        }
+
+
         url = urlparse.urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
         body = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
-        data = requests.get(url, headers=header, json=body)
+        data = requests.get(url, headers=headers, params={'json': json.dumps( body ) })
+        print data.text
         return data
 
 

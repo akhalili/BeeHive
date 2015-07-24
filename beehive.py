@@ -11,7 +11,11 @@ def main():
     thermostat = Thermostat(APP_KEY)
     thermostat.make_request()
 
-    raw_input('wait:')
+    print ('wait to finish')
+
+    del thermostat
+
+    print('Finished')
 
 
 if __name__ == '__main__':
