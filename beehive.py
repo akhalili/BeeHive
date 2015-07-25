@@ -14,7 +14,7 @@ def main():
     print ('wait to finish')
     raw_input('press a key')
 
-    del thermostat
+    thermostat.__del__()
 
 
     print('main Finished')
