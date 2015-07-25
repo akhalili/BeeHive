@@ -15,6 +15,8 @@ API_VERSION = 1
 
 class Thermostat:
 
+    temperature = 0
+
     def __init__(self, api_key):
 
         self.api_key = api_key
