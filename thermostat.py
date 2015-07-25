@@ -19,7 +19,7 @@ class Thermostat:
 
         self.api_key = api_key
         self.run_refresh_token = True
-        self.write_config_file_lock = threading.Lock()
+        self.authorization_data_access = threading.Lock()
         self.refresh_token_event = threading.Event()
 
         try:
@@ -57,23 +57,22 @@ class Thermostat:
         self.request_token()
 
         # start periodically update the token
-        wait_time = (self.expires-datetime.datetime.now()).total_seconds() / 2
-        self.refreshing_token_thread = threading.Thread(self.periodically_refresh_token).start()
+        self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
 
     #
     # Update the authorization config file
     #
     def write_author_config_file(self):
-        with self.write_config_file_lock:
-            with open('./AutoConfig.txt', 'wb') as config_file:
-                data = {'access_token': self.access_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
-                json.dump(data, config_file, ensure_ascii=False)
+
+        with open('./AutoConfig.txt', 'wb') as config_file:
+            data = {'access_token': self.access_token, 'token_type': self.token_type, 'refresh_token': self.refresh_token, 'expires': self.expires.strftime('%Y-%m-%d %H:%M:%S')}
+            json.dump(data, config_file, ensure_ascii=False)
 
     #
     # Read the authorization config file
     #
     def read_author_config_file(self):
-        with self.write_config_file_lock:
+        with self.authorization_data_access:
             data = []
             with open('./AutoConfig.txt', 'rb') as config_file:
                 data = json.load(config_file)
@@ -90,45 +89,51 @@ class Thermostat:
     # authorization config file
     #
     def request_token(self):
-        token_params = {'grant_type':'ecobeePin', 'code': self.authorization_token, 'client_id': self.api_key}
-        data = self.post('token', params=token_params)
-        self.access_token = data['access_token']
-        self.token_type = data['token_type']
-        self.refresh_token = data['refresh_token']
-        self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
 
-        # update the authorization config file
-        self.write_author_config_file()
+        # lock the access to authorization data for new codes
+        with self.authorization_data_access:
+
+            # Request the access tokens
+            token_params = {'grant_type':'ecobeePin', 'code': self.authorization_token, 'client_id': self.api_key}
+            data = self.post('token', params=token_params)
+            self.access_token = data['access_token']
+            self.token_type = data['token_type']
+            self.refresh_token = data['refresh_token']
+            self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
+
+            # update the authorization config file
+            self.write_author_config_file()
 
     #
     # refresh the access token and update
     # the authorization config file
     #
     def refresh_access_token(self):
-        token_params = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token, 'client_id': self.api_key}
-        data = self.post('token', params=token_params)
+        # lock the access to authorization data for new codes
+        with self.authorization_data_access:
 
-        # update the class params
-        self.access_token = data['access_token']
-        self.token_type = data['token_type']
-        self.refresh_token = data['refresh_token']
-        self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
+            # Request the access tokens
+            token_params = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token, 'client_id': self.api_key}
+            data = self.post('token', params=token_params)
 
-        # update the authorization config file
-        self.write_author_config_file()
+            # update the class params
+            self.access_token = data['access_token']
+            self.token_type = data['token_type']
+            self.refresh_token = data['refresh_token']
+            self.expires = datetime.datetime.now() + datetime.timedelta(minutes=data['expires_in'])
+
+            # update the authorization config file
+            self.write_author_config_file()
 
     #
     # Periodically refresh the access token
     #
     def periodically_refresh_token(self):
-        print ('refresh token waiting...')
-        self.refresh_token_event.wait(10) #(self.expires-datetime.datetime.now()).total_seconds())
-        print ('refresh token ...:' + str(datetime.datetime.now()))
-        self.refresh_access_token()
-
-        if self.run_refresh_token:
-            threading.Thread(self.periodically_refresh_token()).start()
-        print ('thread finished')
+        while self.run_refresh_token:
+            self.refresh_token_event.wait(10) #(self.expires-datetime.datetime.now()).total_seconds())
+            print ('refresh token ...' + str(datetime.datetime.now()))
+            self.refresh_access_token()
+            print ('thread finished')
 
     #
     # get a task and parameters to ecobee

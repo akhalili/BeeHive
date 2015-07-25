@@ -12,10 +12,12 @@ def main():
     thermostat.make_request()
 
     print ('wait to finish')
+    raw_input('press a key')
 
     del thermostat
 
-    print('Finished')
+
+    print('main Finished')
 
 
 if __name__ == '__main__':
