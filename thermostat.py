@@ -15,7 +15,7 @@ API_VERSION = 1
 
 class Thermostat:
 
-    temperature = 0
+    temperature = 10
 
     def __init__(self, api_key):
 
@@ -132,7 +132,7 @@ class Thermostat:
     #
     def periodically_refresh_token(self):
         while self.run_refresh_token:
-            self.refresh_token_event.wait(10) #(self.expires-datetime.datetime.now()).total_seconds())
+            self.refresh_token_event.wait((self.expires-datetime.datetime.now()).total_seconds())
             print ('refresh token ...' + str(datetime.datetime.now()))
             self.refresh_access_token()
             print ('thread finished')
@@ -165,15 +165,29 @@ class Thermostat:
 
         return parsed_response
 
-    def make_request(self):
+    def __make_request(self, params):
 
+        # The header of the request
         headers = {
                     'Content-Type': 'application/json;charset=UTF-8',
                     'Authorization': "%s %s" % (self.token_type, self.access_token)
-        }
+                    }
 
         url = urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
-        body = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
-        data = requests.get(url, headers=headers, params={'json': json.dumps(body)})
-        print data.text
-        return data
+        data = requests.get(url, headers=headers, params={'json': json.dumps(params)})
+        parsed_response = data.json()
+        return parsed_response
+
+    def get_temperature(self):
+        temperature_params = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}
+        data = self.__make_request(temperature_params)
+
+        temperature = 0
+        num_thermostats = len(data['thermostatList'])
+
+        for thermostat in data['thermostatList']:
+            temperature += thermostat['runtime']['actualTemperature']
+
+        temperature /=num_thermostats
+
+        return temperature

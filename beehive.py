@@ -6,6 +6,7 @@ kivy.require('1.9.0') # replace with your current kivy version !
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
+from kivy.properties import NumericProperty
 from thermostat import Thermostat
 
 
@@ -28,20 +29,24 @@ def main():
 
 class ThermostatBillboard(Widget):
 
+    temperature = NumericProperty(60)
+
     # Each thermostat billboard has a thermostat
-    thermostate = Thermostat(APP_KEY)
+    thermostat = Thermostat(APP_KEY)
 
-    def update_billboard(self):
-        pass
+    def refresh(self, dt):
+        temperature = self.thermostat.get_temperature()
+        self.temperature = temperature / 10.0
 
-    def build(self):
-
-        Clock.schedule_interval(self.thermostat.make_request(), 10)
+    def __del__(self):
+        thermostat.__del__()
 
 
 class BeeHiveApp(App):
     def build(self):
-        return Button(text='Hello World')
+        billboard = ThermostatBillboard()
+        Clock.schedule_interval(billboard.refresh, 10)
+        return billboard
 
 if __name__ == '__main__':
     BeeHiveApp().run()

@@ -3,11 +3,11 @@
 <ThermostatBillboard>:
     canvas:
         Rectangle:
-            pos: self.center_x - 5, 0
-            size: 10, self.height
+            pos: self.center
+            size: self.width / 2., self.height / 2.
 
     Label:
         font_size: 70
         center_x: root.width / 4
         top: root.top - 50
-        text: str(root.thermostat.temperature)
+        text: str(root.temperature)
