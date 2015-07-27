@@ -37,21 +37,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="beehive.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="beehive.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/beehive.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="13" column="37" selection-start-line="13" selection-start-column="37" selection-end-line="13" selection-end-column="37" />
+            <state vertical-scroll-proportion="0.39078155">
+              <caret line="13" column="35" selection-start-line="13" selection-start-column="35" selection-end-line="13" selection-end-column="35" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="BeeHive.kv" pinned="false" current-in-tab="true">
+      <file leaf-file-name="BeeHive.kv" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/BeeHive.kv">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.27054107">
-              <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="9" column="29" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
               <folding />
             </state>
           </provider>
@@ -68,14 +68,17 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="PUSH_TAGS">
+      <GitPushTagMode />
+    </option>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/thermostat.py" />
-        <option value="$PROJECT_DIR$/beehive.py" />
         <option value="$PROJECT_DIR$/BeeHive.kv" />
+        <option value="$PROJECT_DIR$/beehive.py" />
       </list>
     </option>
   </component>
@@ -383,7 +386,13 @@
       <option name="project" value="LOCAL" />
       <updated>1437908733319</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Size of application changed in the config and temperature label put to the middle of convas">
+      <created>1437986924946</created>
+      <option name="number" value="00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1437986924946</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TodoView">
@@ -435,7 +444,8 @@
     <MESSAGE value="adding kivy" />
     <MESSAGE value="trying to make the convas" />
     <MESSAGE value="working fine" />
-    <option name="LAST_COMMIT_MESSAGE" value="working fine" />
+    <MESSAGE value="Size of application changed in the config and temperature label put to the middle of convas" />
+    <option name="LAST_COMMIT_MESSAGE" value="Size of application changed in the config and temperature label put to the middle of convas" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -619,10 +629,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/beehive.py">
+    <entry file="file://$PROJECT_DIR$/BeeHive.kv">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="13" column="37" selection-start-line="13" selection-start-column="37" selection-end-line="13" selection-end-column="37" />
+          <caret line="9" column="29" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
           <folding />
         </state>
       </provider>
@@ -637,10 +647,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/BeeHive.kv">
+    <entry file="file://$PROJECT_DIR$/beehive.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.27054107">
-          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+        <state vertical-scroll-proportion="0.39078155">
+          <caret line="13" column="35" selection-start-line="13" selection-start-column="35" selection-end-line="13" selection-end-column="35" />
           <folding />
         </state>
       </provider>
