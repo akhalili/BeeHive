@@ -146,7 +146,7 @@ class Thermostat:
     def get(self, task, params):
 
         url = urljoin(ECOBEE_URL, task)
-        response = requests.get(url, params)
+        response = requests.get(url=url, params=params)
         parsed_response = response.json()
 
         return parsed_response
