@@ -11,7 +11,7 @@ from thermostat import Thermostat
 from kivy.config import Config
 from trackbar import TrackBar
 
-Config.set('graphics', 'width', '100')
+Config.set('graphics', 'width', '50')
 Config.set('graphics', 'height', '500')
 
 
@@ -39,10 +39,10 @@ class ThermostatBillboard(Widget):
     # Each thermostat billboard has a thermostat
     thermostat = Thermostat(APP_KEY)
 
-    def __init__(self):
-        super(ThermostatBillboard, self).__init__()
+    def __init__(self, **kwargs):
+        super(ThermostatBillboard, self).__init__(**kwargs)
         with self.canvas:
-            TrackBar()
+            TrackBar(pos=(self.width/2 - 10,10), size=(20, 300))
 
     def refresh(self, dt):
         temperature = self.thermostat.get_temperature()
