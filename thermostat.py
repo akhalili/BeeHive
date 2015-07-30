@@ -166,17 +166,17 @@ class Thermostat:
         return parsed_response
 
     def __make_request(self, params):
+        with self.authorization_data_access:
+            # The header of the request
+            headers = {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        'Authorization': "%s %s" % (self.token_type, self.access_token)
+                        }
 
-        # The header of the request
-        headers = {
-                    'Content-Type': 'application/json;charset=UTF-8',
-                    'Authorization': "%s %s" % (self.token_type, self.access_token)
-                    }
-
-        url = urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
-        data = requests.get(url, headers=headers, params={'json': json.dumps(params)})
-        parsed_response = data.json()
-        return parsed_response
+            url = urljoin(ECOBEE_URL, str(API_VERSION) + '/thermostat')
+            data = requests.get(url, headers=headers, params={'json': json.dumps(params)})
+            parsed_response = data.json()
+            return parsed_response
 
     def get_temperature(self):
         temperature_params = {'selection': {'selectionType': 'registered', 'selectionMatch': '', 'includeRuntime': 'true'}}

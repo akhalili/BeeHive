@@ -43,7 +43,7 @@ class ThermostatBillboard(Widget):
         self.temperature = temperature / 10.0
 
     def __del__(self):
-        thermostat.__del__()
+        self.thermostat.__del__()
 
 
 class BeeHiveApp(App):
