@@ -35,9 +35,12 @@ class Thermostat:
                 self.refreshing_token_thread = threading.Thread(target=self.periodically_refresh_token).start()
                 sleep(10)
 
-    def __del__(self):
+    def terminate(self):
         self.run_refresh_token = False
         self.refresh_token_event.set()
+
+    def __del__(self):
+        self.terminate()
 
     #
     # authorize the thermostat
@@ -133,6 +136,11 @@ class Thermostat:
     def periodically_refresh_token(self):
         while self.run_refresh_token:
             self.refresh_token_event.wait((self.expires-datetime.datetime.now()).total_seconds())
+
+            # Check the run_fresh_token after waking up
+            if not self.run_refresh_token:
+                break
+
             print ('refresh token ...' + str(datetime.datetime.now()))
             self.refresh_access_token()
             print ('thread finished')

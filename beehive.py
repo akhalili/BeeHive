@@ -7,6 +7,7 @@ from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.properties import NumericProperty
+from kivy.properties import ObjectProperty
 from thermostat import Thermostat
 from kivy.config import Config
 from trackbar import TrackBar
@@ -18,19 +19,6 @@ Config.set('graphics', 'height', '500')
 # consts
 APP_KEY = unicode('gSeiSW30EV15zvA4efOIjD2lmsSioVz9')
 
-def main():
-
-    # init thermostat
-    thermostat = Thermostat(APP_KEY)
-    thermostat.make_request()
-
-    print ('wait to finish')
-    raw_input('press a key')
-
-    thermostat.__del__()
-
-
-    print('main Finished')
 
 class ThermostatBillboard(Widget):
 
@@ -48,20 +36,26 @@ class ThermostatBillboard(Widget):
         temperature = self.thermostat.get_temperature()
         self.temperature = temperature / 10.0
 
+    def terminate(self):
+        self.thermostat.terminate()
+
     def __del__(self):
-        self.thermostat.__del__()
+        self.terminate()
 
 
 class BeeHiveApp(App):
+
+    billboard = ObjectProperty()
+
     def build(self):
-        billboard = ThermostatBillboard()
-        Clock.schedule_interval(billboard.refresh, 10)
-        return billboard
+        self.title = 'BeeHive'
+        self.billboard = ThermostatBillboard()
+        Clock.schedule_interval(self.billboard.refresh, 10)
+        return self.billboard
+
+    def on_stop(self):
+        self.billboard.terminate()
+
 
 if __name__ == '__main__':
     BeeHiveApp().run()
-
-'''
-if __name__ == '__main__':
-    main()
-'''
